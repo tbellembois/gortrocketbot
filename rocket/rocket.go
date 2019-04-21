@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/RocketChat/Rocket.Chat.Go.SDK/models"
 	"github.com/RocketChat/Rocket.Chat.Go.SDK/realtime"
@@ -20,6 +21,8 @@ var (
 	config *Config
 	// channels the bot has subscribed in
 	channels []models.Channel
+	// channels already subscribed
+	channelsIds map[string]string
 	// registered plugins
 	plugins map[string]Plugin
 	// plugins result message
@@ -33,6 +36,7 @@ var (
 
 func init() {
 	plugins = make(map[string]Plugin)
+	channelsIds = make(map[string]string)
 
 	// initializing the pool
 	newCmdResult := func() interface{} {
@@ -84,14 +88,30 @@ func Run(c *Config) {
 
 	// subscribing to the channels
 	msgChannel := make(chan models.Message, 10)
-	for _, ch := range channels {
-		if config.Debug {
-			fmt.Println(fmt.Printf("subscribed to: %v", ch))
+
+	// updating the subscribed channels regularly
+	go func() {
+		for {
+			// getting the channels the bot is member of
+			if channels, e = rtc.GetChannelsIn(); e != nil {
+				log.Panic("can not get channels in " + e.Error())
+			}
+
+			for _, ch := range channels {
+				if _, ok := channelsIds[ch.ID]; !ok {
+					if config.Debug {
+						fmt.Println(fmt.Printf("subscribed to: %v", ch))
+					}
+					if e = rtc.SubscribeToMessageStream(&models.Channel{ID: ch.ID}, msgChannel); e != nil {
+						log.Println("can not subscribe to message stream for channel " + ch.ID + " " + e.Error())
+					}
+					// mark channel as subscribed
+					channelsIds[ch.ID] = ch.ID
+				}
+			}
+			time.Sleep(2 * time.Second)
 		}
-		if e = rtc.SubscribeToMessageStream(&models.Channel{ID: ch.ID}, msgChannel); e != nil {
-			log.Println("can not subscribe to message stream for channel " + ch.ID + " " + e.Error())
-		}
-	}
+	}()
 
 	// listening for incoming messages forever
 	for {
