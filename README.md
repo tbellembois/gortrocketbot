@@ -8,6 +8,8 @@ The `main.go` file shows how to run the bot including plugins.
 
 ## Plugin developpement
 
+Look at the plugins [repository](https://github.com/tbellembois/gortrocketbot-plugins).
+
 The `hello` plugin is an example.
 
 ## Help command
