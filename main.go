@@ -6,7 +6,7 @@ import (
 	"github.com/tbellembois/gortrocketbot/rocket"
 
 	// import the plugins here
-	_ "github.com/tbellembois/gortrocketbot/hello"
+	_ "github.com/tbellembois/gortrocketbot-plugins/hello"
 )
 
 func main() {
