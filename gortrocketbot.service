@@ -1,0 +1,12 @@
+[Unit]
+Description=GoRTRocketBot
+After=network.target
+
+[Service]
+ExecStart=/usr/local/gortrocketbot/startbot.sh
+WorkingDirectory=/usr/local/gortrocketbot 
+User=gortrocketbot
+Group=gortrocketbot
+
+[Install]
+WantedBy=multi-user.target
