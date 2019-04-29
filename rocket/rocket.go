@@ -133,13 +133,27 @@ func Run(c *Config) {
 					fmt.Println(fmt.Sprintf("cmd: %s cmdArgs: %v", splCmd[0], splCmd[1:]))
 				}
 
+				// should never happen
+				if len(splCmd) == 0 {
+					return
+				}
+				cmdName := splCmd[0]
+				// does command has arguments?
+				cmdHasArgs := false
+				if len(splCmd) > 1 {
+					cmdHasArgs = true
+				}
+
 				// help?
-				if splCmd[0] == "help" || splCmd[0] == "?" || splCmd[0] == "aide" {
-					fmt.Println(helpMsg)
+				if cmdName == "help" || cmdName == "?" || cmdName == "aide" {
 					*cr = helpMsg
-				} else if cmd, ok := plugins[splCmd[0]]; ok {
+				} else if cmd, ok := plugins[cmdName]; ok {
 					// executing the command
-					*cr = cmd.CommandFunc(splCmd[1:]...)
+					if cmdHasArgs {
+						*cr = cmd.CommandFunc(splCmd[1:]...)
+					} else {
+						*cr = cmd.CommandFunc()
+					}
 					if c.Debug {
 						fmt.Println(fmt.Sprintf("executing command %s", cmd.Name))
 						fmt.Println(fmt.Sprintf("command result: %s", *cr))
