@@ -27,8 +27,6 @@ var (
 	plugins map[string]Plugin
 	// plugins result message
 	cmdResult sync.Pool
-	// help message
-	helpMsg string
 
 	debug bool
 	e     error
@@ -57,14 +55,6 @@ func RegisterPlugin(p Plugin) {
 func Run(c *Config) {
 
 	config = c
-
-	// building the help message
-	for k, v := range plugins {
-		if config.Debug {
-			fmt.Println(fmt.Sprintf("plugin: %s help: %s", k, v.Help))
-		}
-		helpMsg += fmt.Sprintf("`%s` %s\n", k, v.Help)
-	}
 
 	// connecting to the server
 	serverURL := &url.URL{Scheme: c.ServerScheme, Host: c.ServerHost}
@@ -146,17 +136,30 @@ func Run(c *Config) {
 
 				// help?
 				if cmdName == "help" || cmdName == "?" || cmdName == "aide" {
+					// building the help message
+					helpMsg := ""
+					for k, v := range plugins {
+						if v.IsAllowed(*m.User) {
+							if config.Debug {
+								fmt.Println(fmt.Sprintf("plugin: %s help: %s", k, v.Help))
+							}
+							helpMsg += fmt.Sprintf("`%s` %s\n", k, v.Help)
+						}
+					}
+
 					*cr = helpMsg
 				} else if cmd, ok := plugins[cmdName]; ok {
-					// executing the command
-					if cmdHasArgs {
-						*cr = cmd.CommandFunc(splCmd[1:]...)
-					} else {
-						*cr = cmd.CommandFunc()
-					}
-					if c.Debug {
-						fmt.Println(fmt.Sprintf("executing command %s", cmd.Name))
-						fmt.Println(fmt.Sprintf("command result: %s", *cr))
+					if cmd.IsAllowed(*m.User) {
+						// executing the command
+						if cmdHasArgs {
+							*cr = cmd.CommandFunc(splCmd[1:]...)
+						} else {
+							*cr = cmd.CommandFunc()
+						}
+						if c.Debug {
+							fmt.Println(fmt.Sprintf("executing command %s", cmd.Name))
+							fmt.Println(fmt.Sprintf("command result: %s", *cr))
+						}
 					}
 				}
 

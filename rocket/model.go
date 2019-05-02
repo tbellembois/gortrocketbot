@@ -1,5 +1,7 @@
 package rocket
 
+import "github.com/RocketChat/Rocket.Chat.Go.SDK/models"
+
 // Config is the Rocket server configuration
 type Config struct {
 	// ServerHost is the Rocket server host name or IP without the scheme
@@ -24,4 +26,8 @@ type Plugin struct {
 	CommandFunc func(...string) string
 	Args        []string
 	Help        string
+
+	// IsAllowed returns true if the user u
+	// can execute the plugin
+	IsAllowed func(models.User) bool
 }
