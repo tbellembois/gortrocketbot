@@ -90,10 +90,13 @@ func Run(c *Config) {
 			for _, ch := range channels {
 				if _, ok := channelsIds[ch.ID]; !ok {
 					if config.Debug {
-						fmt.Println(fmt.Printf("subscribed to: %v", ch))
+						fmt.Println(fmt.Printf("subscribed to: %s type: %s", ch.Name, ch.Type))
 					}
-					if e = rtc.SubscribeToMessageStream(&models.Channel{ID: ch.ID}, msgChannel); e != nil {
-						log.Println("can not subscribe to message stream for channel " + ch.ID + " " + e.Error())
+					// listen only to direct messages
+					if strings.HasPrefix(ch.Type, "d") {
+						if e = rtc.SubscribeToMessageStream(&models.Channel{ID: ch.ID}, msgChannel); e != nil {
+							log.Println("can not subscribe to message stream for channel " + ch.ID + " " + e.Error())
+						}
 					}
 					// mark channel as subscribed
 					channelsIds[ch.ID] = ch.ID
